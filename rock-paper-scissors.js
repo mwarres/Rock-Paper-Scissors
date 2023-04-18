@@ -1,3 +1,22 @@
+function game() {
+    console.log("Welcome to Rock, Paper, Scissors! There will be 5 rounds of the game! You'll be playing against the computer, a formidable opponent. Good luck!!")
+    let playerWinCount = 0;
+    for (let i = 0; i < 5; i++) {
+        const message = playRound();
+        if (message[4] === "w") playerWinCount++;
+    }
+    if (playerWinCount >= 3) console.log("Congrats!! You win!!");
+    else console.log("Sorry, it looks like the computer beat you. Better luck next time!");
+}
+
+function playRound() {
+    const computerSelection = getComputerChoice();
+    const playerSelection = prompt("Enter your choice: rock, paper, or scissors!");
+    const winMessage = pickWinner(playerSelection, computerSelection);
+    console.log(winMessage);
+    return winMessage;
+}
+
 function getComputerChoice() {
     const choiceNum = Math.random();
     let choice;
