@@ -1,144 +1,229 @@
-let roundNum = 1;
-let playerWinCount = 0;
+class Game {
+    static newGame() {
+        const currGame = new Game();
+        currGame.startGame();
+        return currGame;
+    }
 
-const start = document.querySelector("#start");
-start.addEventListener("click", game);
+    constructor() {
+        this.currRound = new Round(1);
+        this.playerWinCount = 0;
+        this.buttonContainer = document.querySelector(".buttonContainer");
+        this.boundEndGame = this.endGame.bind(this);
+        this.buttonContainer.addEventListener("gameFinished", this.boundEndGame);
+    }
 
-function game() {
-    const h1 = document.querySelector("h1");
-    h1.textContent = `Round ${roundNum} of Rock, Paper, Scissors!`;
-    createRPSButtons();
-    generateRPSClickListeners("rock", "paper", "scissors");
-}
+    startGame() {
+        const h1 = document.querySelector("h1");
+        h1.textContent = "Welcome to Rock, Paper, Scissors!!";
+        let start = document.getElementById("start");
+        if (!start) {
+            start = document.createElement("button");
+            start.id = "start";
+            start.textContent = "Start!"
+            const buttonContainer = document.querySelector(".buttonContainer");
+            buttonContainer.appendChild(start);
+        }
+        start.addEventListener("click", this.currRound.displayRoundUI.bind(this.currRound));
+    }
 
-function playRound(e) {
-    // Remove game info from UI if it's the first round of the first game.
-    if (roundNum === 1) {
-        const gameInfo = document.querySelector(".gameInfo");
-        if (gameInfo) {
-            const body = document.querySelector("body");
-            body.removeChild(gameInfo);
+    endGame() {
+        // Display message for winning or losing the game.
+        const h1 = document.querySelector("h1");
+        if (this.playerWinCount >= 3) {
+            h1.textContent = "Congratulations, you win!!!"
+        } else {
+            h1.textContent = "Sorry, it looks like the computer beat you. " +
+                "Better luck next time!";
+        }
+
+        /* Remove "gameFinished" event listener, clear UI, and add "Play Again"
+         * button.
+         */
+        this.buttonContainer.removeEventListener("gameFinished", this.boundEndGame);
+        this.clearUIAtEnd();
+        this.addPlayAgainButton();
+    }
+
+    /* Clear results and remove no-longer-needed Rock, Paper, Scissors buttons
+     * at the end of game.
+     */
+    clearUIAtEnd() {
+        const results = document.querySelector(".results");
+        results.textContent = "";
+        const buttonContainer = document.querySelector(".buttonContainer");
+        while (buttonContainer.firstChild) {
+            buttonContainer.removeChild(buttonContainer.firstChild);
         }
     }
 
+    addPlayAgainButton() {
+        const playAgain = document.createElement("button");
+        playAgain.id = "playAgain";
+        playAgain.textContent = "Play Again";
+        playAgain.addEventListener("click", this.setupNewGame.bind(this));
+        const body = document.querySelector("body");
+        body.appendChild(playAgain);
+    }
+
+    setupNewGame() {
+        const playAgainButton = document.getElementById("playAgain");
+        playAgainButton.removeEventListener("click", this.setupNewGame);
+        const body = document.querySelector("body");
+        body.removeChild(playAgainButton);
+        currGame = Game.newGame();
+    }
+}
+
+class Round {
+    constructor(roundNum) {
+        this.roundNum = roundNum;
+    }
+
     // Add round number information to the UI.
-    const h1 = document.querySelector("h1");
-    h1.textContent = `Round ${roundNum} of Rock, Paper, Scissors!`;
+    displayRoundNum() {
+        const h1 = document.querySelector("h1");
+        h1.textContent = `Round ${this.roundNum} of Rock, Paper, Scissors!`;
+    }
 
-    // Determine appropriate message regarding win.
-    const computerSelection = getComputerChoice();
-    const playerSelection = e.target.id;
-    const winMessage = winnerMessage(playerSelection, computerSelection);
+    displayRoundUI() {
+        this.removeGameInfo();
+        this.generateRPSButtons();
+        this.displayRoundNum();
+    }
 
-    /* Update player win count. When the 4th element of winMessage is "w",
-     * the player has won the round.
+    playRound(e) {
+        // Determine appropriate message regarding win.
+        const computerSelection = this.getComputerChoice();
+        const playerSelection = e.target.id;
+        if (playerSelection !== "start") {
+            const winMessage = this.winnerMessage(playerSelection, computerSelection);
+            /* Update the game's player win count. When the 4th element of winMessage
+             * is "w", the player has won the round.
+             */
+            if (winMessage[4] === "w") currGame.playerWinCount++;
+            if (this.roundNum < 5) {
+                this.displayRoundInfo(winMessage);
+            }
+        }
+
+        // Remove the event listeners and buttons for this round.
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach(button => {
+                removeEventListener("click", this.playRound.bind(this));
+            }
+        );
+        const buttonContainer = document.querySelector(".buttonContainer");
+        while (buttonContainer.firstChild) buttonContainer.removeChild(buttonContainer.firstChild);
+
+
+        /* If there are additional rounds left in the game, display the round
+         * information in the UI. Otherwise, end the game.
+         */
+        if (this.roundNum < 5) {
+            currGame.currRound = new Round(this.roundNum + 1);
+            currGame.currRound.displayRoundUI();
+        } else {
+            const gameFinished = new Event("gameFinished");
+            const buttonContainer = document.querySelector(".buttonContainer");
+            buttonContainer.dispatchEvent(gameFinished);
+        }
+    }
+
+    // Remove game info from UI if it's the first round of the first game.
+    removeGameInfo() {
+         const gameInfo = document.querySelector(".gameInfo");
+         if (gameInfo) {
+             const body = document.querySelector("body");
+             body.removeChild(gameInfo);
+         }
+    }
+
+    /* Generate Rock, Paper, and Scissors Buttons for the UI, clear UI of
+     * pre-existing unnecessary UI elements, and create event listeners for
+     * playRound on the Rock, Paper, Scissors Buttons.
      */
-    if (winMessage[4] === "w") playerWinCount++;
-
-    // If we aren't at the end of the game, display the round info.
-        // Otherwise, end the game and display the game stats.
-    if (roundNum < 5) {
-        displayRoundInfo(winMessage);
-    }
-    else endGame();
-}
-
-function displayRoundInfo(winMessage) {
-    const resultsDiv = document.querySelector(".results");
-    resultsDiv.textContent = winMessage;
-    const currStatus = document.createElement("div");
-    currStatus.textContent = `You\'ve won ${playerWinCount} rounds. \n` +
-        `The computer has won ${roundNum - playerWinCount} rounds. ` +
-        `Make a selection to play round ${++roundNum}!!`
-    resultsDiv.appendChild(currStatus);
-}
-
-function endGame() {
-    // Display message for winning or losing the game.
-    h1 = document.querySelector("h1");
-    if (playerWinCount >= 3) {
-        h1.textContent = "Congratulations, you win!!!"
-    } else {
-        h1.textContent = "Sorry, it looks like the computer beat you. Better luck next time!";
+    generateRPSButtons() {
+        const buttonContainer = document.querySelector(".buttonContainer");
+        const rpsButtons = new RPSButtons(buttonContainer);
+        rpsButtons.clearUI();
+        const boundGenRPSClickListers = rpsButtons.generateRPSClickListeners.bind(this);
+        boundGenRPSClickListers("rock", "paper", "scissors");
     }
 
-    // Remove no-longer-necessary UI elements.
-    const results = document.querySelector(".results");
-    results.textContent = "";
-    const buttonContainer = document.querySelector(".buttonContainer");
-    while (buttonContainer.firstChild) {
-        buttonContainer.removeChild(buttonContainer.firstChild);
+    displayRoundInfo(winMessage) {
+        const resultsDiv = document.querySelector(".results");
+        resultsDiv.textContent = winMessage;
+        const currStatus = document.createElement("div");
+        currStatus.textContent = `You\'ve won ${currGame.playerWinCount} rounds. ` +
+            `The computer has won ${this.roundNum - currGame.playerWinCount} rounds. ` +
+            `Make a selection to play round ${this.roundNum + 1}!!`
+        resultsDiv.appendChild(currStatus);
     }
 
-    // Add a button for playing again.
-    const playAgain = document.createElement("button");
-    playAgain.id = "playAgain";
-    playAgain.textContent = "Play Again";
-    playAgain.addEventListener("click", game);
-    const body = document.querySelector("body");
-    body.appendChild(playAgain);
-
-    // Reset player win count and round number.
-    roundNum = 1;
-    playerWinCount = 0;
-}
-
-function getComputerChoice() {
-    const choiceNum = Math.random();
-    let choice;
-    if (choiceNum < 0.33) choice = "rock";
-    else if (choiceNum < 0.66) choice = "paper";
-    else choice = "scissors";
-    return choice;
-}
-
-function winnerMessage(playerSelection, computerSelection) {
-    playerSelection = playerSelection;
-    const winOrder = ["rock", "paper", "scissors"];
-    const playerNum = winOrder.indexOf(playerSelection);
-    const computerNum = winOrder.indexOf(computerSelection);
-    if (playerNum === computerNum)  {
-        return `You tied! You both chose ${playerSelection}.`;
-    } else if (computerNum === (playerNum + 1) % 3) {
-        return `You lose! ${capitalizeFirstLetter(computerSelection)} beats ${playerSelection}.`;
+    getComputerChoice() {
+        const choiceNum = Math.random();
+        let choice;
+        if (choiceNum < 0.33) choice = "rock";
+        else if (choiceNum < 0.66) choice = "paper";
+        else choice = "scissors";
+        return choice;
     }
-    return `You win! ${capitalizeFirstLetter(playerSelection)} beats ${computerSelection}.`;
+
+    winnerMessage(playerSelection, computerSelection) {
+        const winOrder = ["rock", "paper", "scissors"];
+        const playerNum = winOrder.indexOf(playerSelection);
+        const computerNum = winOrder.indexOf(computerSelection);
+        if (playerNum === computerNum)  {
+            return `You tied! You both chose ${playerSelection}.`;
+        } else if (computerNum === (playerNum + 1) % 3) {
+            return `You lose! ${this.capitalizeFirstLetter(computerSelection)} beats ${playerSelection}.`;
+        }
+        return `You win! ${this.capitalizeFirstLetter(playerSelection)} beats ${computerSelection}.`;
+    }
+
+    capitalizeFirstLetter(str) {
+        const letters = str.split("");
+        letters[0] = letters[0].toUpperCase();
+        return letters.join("");
+    }
 }
 
-function capitalizeFirstLetter(str) {
-    const letters = str.split("");
-    letters[0] = letters[0].toUpperCase();
-    return letters.join("");
+class Button {
+    constructor(id, text) {
+        this.button = document.createElement("button");
+        this.button.id = id;
+        this.button.textContent = text;
+    }
 }
 
-function createButton(id, text) {
-    const button = document.createElement("button");
-    button.id = id;
-    button.textContent = text;
-    return button;
-}
-
-function createRPSButtons() {
+class RPSButtons {
     // Generate Rock, Paper, and Scissors buttons. Add them to the UI.
-    const rock = createButton("rock", "Rock");
-    const paper = createButton("paper", "Paper");
-    const scissors = createButton("scissors", "Scissors");
-    const buttonContainer = document.querySelector(".buttonContainer");
-    [rock, paper, scissors].forEach(elem => buttonContainer.appendChild(elem));
+    constructor(buttonContainer) {
+        this.rock = new Button("rock", "Rock");
+        this.paper = new Button("paper", "Paper");
+        this.scissors = new Button("scissors", "Scissors");
+        this.buttonContainer = buttonContainer;
+        [this.rock.button, this.paper.button, this.scissors.button].forEach(elem => buttonContainer.appendChild(elem));
+    }
 
     // Remove now unnecessary buttons from the UI.
-    const start = document.querySelector("#start");
-    if (start) buttonContainer.removeChild(start);
-    const playAgain = document.querySelector("#playAgain");
-    if (playAgain) {
-        const body = document.querySelector("body");
-        body.removeChild(playAgain);
+    clearUI() {
+        const start = document.getElementById("start");
+        if (start) this.buttonContainer.removeChild(start);
+        const playAgain = document.getElementById("playAgain");
+        if (playAgain) {
+            const body = document.querySelector("body");
+            body.removeChild(playAgain);
+        }
+    }
+
+    generateRPSClickListeners(...buttons) {
+        buttons.forEach(button => {
+            const buttonName = document.getElementById(`${button}`);
+            buttonName.addEventListener("click", this.playRound.bind(this));
+        })
     }
 }
 
-function generateRPSClickListeners(...buttons) {
-    buttons.forEach(button => {
-        const buttonName = document.querySelector(`#${button}`);
-        buttonName.addEventListener("click", playRound);
-    })
-}
+let currGame = Game.newGame();
