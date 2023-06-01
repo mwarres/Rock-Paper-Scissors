@@ -148,7 +148,7 @@ class Round {
         const rpsButtons = new RPSButtons(buttonContainer);
         rpsButtons.clearUI();
         const boundGenRPSClickListers = rpsButtons.generateRPSClickListeners.bind(this);
-        boundGenRPSClickListers("rock", "paper", "scissors");
+        boundGenRPSClickListers("Rock", "Paper", "Scissors");
     }
 
     displayRoundInfo(winMessage) {
@@ -164,28 +164,22 @@ class Round {
     getComputerChoice() {
         const choiceNum = Math.random();
         let choice;
-        if (choiceNum < 0.33) choice = "rock";
-        else if (choiceNum < 0.66) choice = "paper";
-        else choice = "scissors";
+        if (choiceNum < 0.33) choice = "Rock";
+        else if (choiceNum < 0.66) choice = "Paper";
+        else choice = "Scissors";
         return choice;
     }
 
     winnerMessage(playerSelection, computerSelection) {
-        const winOrder = ["rock", "paper", "scissors"];
+        const winOrder = ["Rock", "Paper", "Scissors"];
         const playerNum = winOrder.indexOf(playerSelection);
         const computerNum = winOrder.indexOf(computerSelection);
         if (playerNum === computerNum)  {
             return `You tied! You both chose ${playerSelection}.`;
         } else if (computerNum === (playerNum + 1) % 3) {
-            return `You lose! ${this.capitalizeFirstLetter(computerSelection)} beats ${playerSelection}.`;
+            return `You lose! ${computerSelection} beats ${playerSelection}.`;
         }
-        return `You win! ${this.capitalizeFirstLetter(playerSelection)} beats ${computerSelection}.`;
-    }
-
-    capitalizeFirstLetter(str) {
-        const letters = str.split("");
-        letters[0] = letters[0].toUpperCase();
-        return letters.join("");
+        return `You win! ${playerSelection} beats ${computerSelection}.`;
     }
 }
 
@@ -200,9 +194,9 @@ class Button {
 class RPSButtons {
     // Generate Rock, Paper, and Scissors buttons. Add them to the UI.
     constructor(buttonContainer) {
-        this.rock = new Button("rock", "Rock");
-        this.paper = new Button("paper", "Paper");
-        this.scissors = new Button("scissors", "Scissors");
+        this.rock = new Button("Rock", "Rock");
+        this.paper = new Button("Paper", "Paper");
+        this.scissors = new Button("Scissors", "Scissors");
         this.buttonContainer = buttonContainer;
         [this.rock.button, this.paper.button, this.scissors.button].forEach(elem => buttonContainer.appendChild(elem));
     }
