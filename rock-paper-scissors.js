@@ -155,9 +155,11 @@ class Round {
         const resultsDiv = document.querySelector(".results");
         resultsDiv.textContent = winMessage;
         const currStatus = document.createElement("div");
+        const nextRoundMessage = this.roundNum < 4 ? `Make a selection to play round ${this.roundNum + 2}!!`
+        : "This is the last round!!";
         currStatus.textContent = `You\'ve won ${currGame.playerWinCount} rounds. ` +
             `The computer has won ${this.roundNum - currGame.playerWinCount} rounds. ` +
-            `Make a selection to play round ${this.roundNum + 1}!!`
+            `${nextRoundMessage}`
         resultsDiv.appendChild(currStatus);
     }
 
