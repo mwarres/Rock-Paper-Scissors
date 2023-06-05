@@ -9,9 +9,9 @@ export default function Game() {
     const [playerWinCount, setPlayerWinCount] = useState(0);
     const [winnerMessage, setWinnerMessage] = useState("");
     
-    function handleClick(e) {
+    function handleClick(e: React.MouseEvent<HTMLButtonElement, MouseEvent>): void {
         const computerSelection = getComputerChoice();
-        const playerSelection = e.target.id;
+        const playerSelection = e.currentTarget.id;
         setRoundNum(roundNum + 1);
         const winMessage = generateWinnerMessage(playerSelection, computerSelection);
         /* Update the game's player win count. When the 4th element of winMessage
@@ -21,16 +21,16 @@ export default function Game() {
         setWinnerMessage(winMessage);
     }
 
-    function getComputerChoice() {
+    function getComputerChoice(): string {
         const choiceNum = Math.random();
-        let choice;
+        let choice: string;
         if (choiceNum < 0.33) choice = "Rock";
         else if (choiceNum < 0.66) choice = "Paper";
         else choice = "Scissors";
         return choice;
     }
 
-    function generateWinnerMessage(playerSelection, computerSelection) {
+    function generateWinnerMessage(playerSelection: string, computerSelection: string): string {
         const winOrder = ["Rock", "Paper", "Scissors"];
         const playerNum = winOrder.indexOf(playerSelection);
         const computerNum = winOrder.indexOf(computerSelection);
