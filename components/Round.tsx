@@ -1,6 +1,13 @@
 import Button from './Button';
 
-export default function Round({ roundNum, playerWinCount, onClick, winnerMessage }) {
+type RoundProps = {
+    roundNum: number;
+    playerWinCount: number;
+    onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+    winnerMessage: string;
+}
+
+export default function Round({ roundNum, playerWinCount, onClick, winnerMessage }: RoundProps) {
     const nextRoundMessage = roundNum < 5 ? `Make a selection to play round ${roundNum + 1}!!`
         : "This is the last round!!";
     
